@@ -1,0 +1,417 @@
+# 1. The Topic
+---
+title: "Cryptography Analysis"
+output:
+  github_document:
+    R_Project_Cryptography
+    [link](git@github.com:veronica1013/R_Project_Cryptography.git)
+  html_document:
+    toc: true
+    theme: united
+  pdf_document:
+    toc:true
+    highlight: zenburn
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1.0 Defining the question
+A Kenyan entrepreneur has created an online cryptography course and would want to advertise it on her blog. She currently targets audiences originating from various countries. In the past, she ran ads to advertise a related course on the same blog and collected data in the process. The main aim isto identify which individuals are most likely to click on her ads.
+
+## 1.1 The metric for success
+To identify which individuals are most likely to click on the ads.
+
+## 1.2 The context
+According to [wikipedia](https://en.wikipedia.org/wiki/Cryptography), until modern times, cryptography referred almost exclusively to encryption, which is the process of converting ordinary information (called plaintext) into unintelligible form (called ciphertext).[12] Decryption is the reverse, in other words, moving from the unintelligible ciphertext back to plaintext. There's therefore a need to know which individuals are most likely to view the course ads.
+
+## 1.3 Experimental design 
+1. Load the dataset
+2. Find and deal with:
+ + Outliers, 
+ + Anomalies, 
+ + Missing data within the dataset
+3. Perform  univariate and bivariate analysis.
+4. Conclusion 
+5. Recommendation.
+
+## 1.4 Appropriateness of the available data 
+The data used is available on this [link](http://bit.ly/IPAdvertisingData) 
+
+```{r}
+# Read in csv data file
+df <- read.table("http://bit.ly/IPAdvertisingData", header = FALSE,sep = ",")
+```
+```{r}
+# Preview the dataframe
+df
+```
+### Exploratory Data Analysis
+```{r}
+# Print the summary of the dataframe.
+print(summary(df)) 
+```
+```{r}
+summary(df)
+```
+
+```{r}
+# Preview the first five rows.
+result <- df[1:5,]
+print(result)
+```
+
+```{r}
+# Preview the las five rows of dataframe
+tail(df, 5)
+```
+```{r}
+View
+```
+```{r echo=FALSE}
+# Preview the dataframe in details
+View(df)
+```
+
+```{r}
+library(knitr)
+```
+```{r}
+# Install a library for plotting graphs
+library(ggplot2)
+```
+```{r}
+library(dplyr)
+```
+
+```{r}
+# Preview the datatypes for all the 10 columns in the dataframe
+glimpse(df)
+```
+```{r}
+# Preview the column names
+colnames(df)
+```
+```{r}
+result2 <- df[1:2,]
+print(result2)
+```
+
+```{r}
+# Load in `ggvis`
+library(ggvis)
+```
+
+```{r}
+# Check for the number of rows and columns in the dataframe
+my_string1 <- "The number of rows in the dataframe are"
+my_variable1 <- nrow(df)
+
+my_string2 <- "\nThe number of columns in the dataframe are"
+my_variable2 <- ncol(df)
+
+cat(paste(my_string1, my_variable1))
+
+cat(paste(my_string2, my_variable2))
+```
+```{r}
+# Check for missing values
+sum(is.na(df))
+mean(is.na(df))
+```
+From the above results, there are no missing values.
+
+# 2 Data Cleaning
+## 2.0 Renaming the Columns
+```{r}
+# Rename columns with the details on the first row
+names(df) <- lapply(df[1, ], as.character)
+
+# Preview to see changes have been made
+head(df, 3)
+```
+The columns have been renamed using the details on the first row. I will therefore drop the first row.
+
+```{r}
+# Drop the first row
+df <- df[-1,] 
+
+# preview the first 3 rows
+head(df, 3)
+```
+```{r}
+# Preview the column names of the dataframe
+colnames(df)
+```
+## 2.1 Removing spaces on the column names and make them lower cases
+
+```{r}
+new_names <- c("Daily_Time_Site", "Age", "Income", "Daily_Internet_Usage",
+               "Ad_Topic_Line", "City", "Male", "Country", "Timestamp",
+               "Clicked_on_Ad")
+colnames(df) <- new_names
+head(df, 2)
+```
+
+## 2.2 Dealing with anomalies in the dataframe
+```{r}
+# Changing the column names from upper case to lower case
+colnames(df) <- tolower(colnames(df))
+
+# Preview to confirm changes are effected
+head(df, 2)
+
+```
+
+All the data types are in character format. There's need to change them to the relevant data types.
+
+### 2.2.1 Change the datatypes to the right ones
+1. Change daily time site, income, daily internet usage, male and clicked_on_ad columns from character to numeric
+Decimal values are referred to as numeric data types in R. Therefore, I will change daily time site, income and daily internet usage columns from character to numeric. 
+
+```{r}
+# Change the data types for daily time site, income and daily internet to numeric
+tonumeric<-c("daily_time_site","income","daily_internet_usage")
+c <- for (i in tonumeric)df[,i]<-as.numeric(df[,i])
+  
+# Confirm the data types after conversion
+class(df$i)
+```
+2. Change the age column from character to integer
+```{r}
+# Change the age, male and clicked_on_ad columns data type from character to integer
+tointeger<- c("age", "male", "clicked_on_ad")
+d <- for (k in tointeger)df[,k]<-as.integer(df[,k])
+
+# Preview the data type for age column
+age_info <- "The data type for the age column is"
+age_class <- class(df$age)
+age_class
+
+cat(paste(age_info, age_class))
+```
+```{r}
+# Change the timestamp data type column from character to date time
+df$timestamp <- as.POSIXct(df$timestamp)   
+#str(timeDate)
+class(df$timestamp)
+```
+
+```{r}
+# Preview data types for the entire dataframe
+sapply(df, class)
+```
+```{r}
+# Preview the first three columns after the changes
+head(df,3)
+```
+
+
+### 2.3 Separate the timestamp column to time and year
+
+### 2.4 Change the data to time series
+```{r}
+# Convert it to a time series object.
+df$clicked_on_ad.timeseries <- ts(df$clicked_on_ad,start = c(2016,1),frequency = 7)
+```
+
+```{r}
+# Print the timeseries data.
+print(df$clicked_on_ad.timeseries)
+```
+```{r}
+# Give the chart file a name.
+png(file = "Cryptography.png")
+```
+
+```{r}
+# Plot a graph of the time series.
+plot(df$clicked_on_ad.timeseries)
+```
+
+### 2.5 Plot a time series graph showing different time visits
+### graph showing time with most clicks on the ad, country, city with most clicks, age group with most visits, male with most clicks, 
+### Group the ages
+### Plot graphs with countrys
+### plot 
+
+
+
+```{r}
+# Saving the dataframe to tibble format
+my_data <- as_tibble(df)
+my_data
+```
+
+```{r}
+# check if there are any duplicates
+duplicated(my_data)
+```
+There are no duplicates in the dataframe
+```{r}
+# Preview the column names
+colnames(my_data)
+```
+```{r}
+# Get the shape of the dataframe
+dim(my_data)
+```
+## 2.3 Check for Outliers
+
+```{r}
+# Load the package
+library(ggstatsplot)
+```
+```{r}
+# Find outliers
+check_outliers(x, ...)
+check_outliers(my_data, method = c("cook", "pareto"), threshold = NULL, ...)
+```
+```{r}
+sapply(my_data, class)
+```
+
+```{r echo=FALSE}
+# Create a boxplot of the dataset for numeric columns
+par(mfrow=c(3,4))
+numeric_col <- c("daily_time_site", "age", "income", "daily_internet_usage", "male",
+                 "clicked_on_ad")
+# Removed the timestamp column
+
+# Plot the boxplot by creating a for loop to iterate in the numeric_col list
+for(g in numeric_col) {
+  hist(df[, g], main=names(df)[g], xlab=NULL)
+  boxplot(df[,g], main=names(df)[g], horizontal = TRUE, geom=c("boxplot", "jitter"),
+          color=df[,g], fill = df$clicked_on_ad)
+}
+```
+
+
+```{r}
+# Create a boxplot of the dataset for character columns
+character_col <- c(my_data$ad_topic_line, my_data$city, my_data$city)
+```
+
+### 2.3.1 Outlier Treatment by use of Capping
+For missing values that lie outside the 1.5 * IQR limits, we could cap it by replacing those observations outside the lower limit with the value of 5th %ile and those that lie above the upper limit, with the value of 95th %ile.
+```{r}
+qnt <- quantile(my_data, probs=c(.25, .75), na.rm = T)
+caps <- quantile(my_data, probs=c(.05, .95), na.rm = T)
+H <- 1.5 * IQR(x, na.rm = T)
+my_data[my_data < (qnt[1] - H)]  (qnt[2] + H)] <- caps[2]
+```
+
+```{r setup, include=TRUE, cache = FALSE, echo=FALSE }
+# Scatter plot
+my_data %>% ggvis(~my_data.age, ~my_data.male, fill = ~clicked_on_ad) %>% layer_points()
+```
+###  interpret and challenge the solution by providing insights on why and how they can make improvements on EDA.
+
+
+# 3.0 Univariate Analysis
+Mean, median, mode,range, interquartile range, standard deviation, skewness, kurtosis, normality
+```{r echo=FALSE}
+# Summary statistics by those who clicked on the ad
+summary(my_data)
+```
+```{r echo=FALSE}
+# Summary statistics by those who clicked on the ad and those who didn't
+by(df, df$clicked_on_ad, summary)
+```
+```{r}
+library(pastecs)
+```
+```{r}
+# Find a detailed descriptive statistics
+options(scipen = 999)# Remove the exponentials on the output 
+stat.desc (df)
+```
+
+```{r echo=FALSE}
+# Plot a qplot  forage
+qplot(log(age), bins=30, data = df,color = factor(age), xlab = 'Age')
+```
+```{r}
+# Plot a qplot for age
+qplot((timestamp), bins=30, data = df, fill=clicked_on_ad,color = factor(age), xlab = 'Time')
+```
+# 4.0 Bivariate Analysis
+Bivariate Analysis-scatter plot, correlation matrix, pearson correlation coefficient, daily internet usage with clicks on ad, provide recommendations for effectively performing bivariate analysis while working on the current problem.
+
+## 4.1 Scatter Plot between those who clicked on the ad and age
+```{r}
+# Scatter plot for age and those who clicked on the ad
+qplot(clicked_on_ad, age, data = df, geom = c("point", "smooth"))
+```
+## 4.2 Scatter Plot between those who clicked on the ad and income
+```{r echo=FALSE}
+# Scatter Plot between those who clicked on the ad and income
+qplot(clicked_on_ad, income, data = df,color = factor(age), geom = c("point", "smooth"))
+```
+```{r}
+# Scatter
+# Scatter plot for age and those who clicked on the ad
+qplot(clicked_on_ad, daily_internet_usage,color = factor(age), data = df, geom = c("point", "smooth"))
+```
+```{r echo=FALSE}
+# Scatter plot for age and those who clicked on the ad
+qplot(male, clicked_on_ad, data = df,color = factor(age), geom = c("point", "smooth"))
+```
+```{r echo=FALSE}
+# Scatter plot for daily time spent on the site and those who clicked on the ad
+qplot(clicked_on_ad, daily_time_site, data = df, color = factor(age), geom = c("point", "smooth"))
+```
+```{r}
+# Scatter plot for daily time spent on the site and those who clicked on the ad
+qplot(clicked_on_ad, timestamp, data = df, geom = c("point", "smooth"))
+```
+
+```{r}
+desc()
+```
+
+```{r}
+library(tidyverse)
+```
+```{r}
+mean = mean(my_data$age)
+print(mean)
+```
+
+```{r}
+
+summarise(my_data,
+         mean_income = mean(income),
+         sd_income = sd(income))
+```
+
+
+```{r}
+mean(my_data, trim = 0, na.rm = FALSE,)
+```
+
+
+```{r echo=FALSE}
+hist(iris[[2]])
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
